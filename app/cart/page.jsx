@@ -1,56 +1,62 @@
 "use client";
 import React, { useContext } from "react";
 import { CartContext } from "../_context/CartContext";
-import GlobalApi from '@/app/_utils/GlobalApi';
+import GlobalApi from "@/app/_utils/GlobalApi";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 function Cart() {
   const { cart, setCart } = useContext(CartContext);
   const { user } = useUser();
-  const router=useRouter();
+  const router = useRouter();
   const getTotalAmount = () => {
-    let totalAmount=0;
-    cart.forEach(element => {
-      totalAmount = totalAmount+Number(element.product.attributes.pricing)
+    let totalAmount = 0;
+    cart.forEach((element) => {
+      totalAmount = totalAmount + Number(element.product.attributes.pricing);
     });
 
     return totalAmount;
-  }
+  };
   /**
    * Delete cart item method
    */
 
   const deleteCartItem_ = (id) => {
-    console.log('Delete record id:',id);
-    GlobalApi.deleteCartItem(id).then(resp=>{
-      console.log(resp);
-      if(resp){
-        getCartItem();
+    console.log("Delete record id:", id);
+    GlobalApi.deleteCartItem(id).then(
+      (resp) => {
+        console.log(resp);
+        if (resp) {
+          getCartItem();
+        }
+      },
+      (error) => {
+        console.log(error);
       }
-    },(error)=>{
-      console.log(error);
-    })
-  }
+    );
+  };
 
   /**
    * Get the cart data from backend
    */
-  const getCartItem=()=>{
-    GlobalApi.getUserCartItems(user.primaryEmailAddress.emailAddress)
-    .then(resp=>{
-      const result=resp.data.data
-      setCart([]);
-      result&&result.forEach(prd=>{
-        setCart(cart=>[...cart,
-          {
-            id:prd.id,
-            product:prd.attributes.products.data[0]
-          }
-          ]);
-      })
-    })
-  }
+  const getCartItem = () => {
+    GlobalApi.getUserCartItems(user.primaryEmailAddress.emailAddress).then(
+      (resp) => {
+        const result = resp.data.data;
+        setCart([]);
+        result &&
+          result.forEach((prd) => {
+            setCart((cart) => [
+              ...cart,
+              {
+                id: prd.id,
+                product: prd.attributes.products.data[0],
+              },
+            ]);
+          });
+      }
+    );
+  };
   return (
     <section>
       <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -96,7 +102,10 @@ function Cart() {
                       </div>
                     </form>
 
-                    <button className="text-gray-600 transition hover:text-red-600" onClick={()=>deleteCartItem_(item.id)}>
+                    <button
+                      className="text-gray-600 transition hover:text-red-600"
+                      onClick={() => deleteCartItem_(item.id)}
+                    >
                       <span className="sr-only">Remove item</span>
 
                       <svg
@@ -120,11 +129,8 @@ function Cart() {
             </ul>
 
             <div className="mt-8 flex justify-end border-t border-gray-100 pt-8">
-              
               <div className="w-screen max-w-lg space-y-4">
-                
                 <dl className="space-y-0.5 text-sm text-gray-700">
-
                   <div className="flex justify-between !text-base font-medium">
                     <dt>Total</dt>
                     <dd>S/. {getTotalAmount()}</dd>
@@ -132,16 +138,20 @@ function Cart() {
                 </dl>
 
                 <div className="flex justify-end">
-                  
-                <button
-                    onClick={()=>router.push('/checkout?amount='+getTotalAmount())}
+                  <button
+                    onClick={() =>
+                      router.push("/checkout?amount=" + getTotalAmount())
+                    }
                     href="/checkout"
                     className="block rounded bg-gray-700 px-5 py-3 text-sm text-gray-100 transition hover:bg-gray-600"
                   >
                     Ir a pagar
                   </button>
                 </div>
-            <p className="text-sm text-gray-500">*Nota: El comprobante de pago será enviado a su correo electrónico.</p>
+                <p className="text-sm text-gray-500">
+                  *Nota: El comprobante de pago será enviado a su correo
+                  electrónico.
+                </p>
               </div>
             </div>
           </div>

@@ -3,14 +3,17 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import GlobalApi from '@/app/_utils/GlobalApi';
+import { useUser } from "@clerk/nextjs";
+import { CartContext } from '@/app/_context/CartContext'
 
 function CheckoutForm({amount}) {
   const stripe = useStripe();
   const elements = useElements();
-
+  const { cart, setCart } = useContext(CartContext);
+  const {user} = useUser();
   const [loading, setLoading] = useState(false);
-
   const handleError = (error) => {
     setLoading(false);
     setErrorMessage(error.message);
@@ -32,6 +35,8 @@ function CheckoutForm({amount}) {
       handleError(submitError);
       return;
     }
+    createOrder();
+    sendEmail();
 
     const res = await fetch("/api/create-intent", {
       method: "POST",
@@ -46,7 +51,7 @@ function CheckoutForm({amount}) {
       clientSecret,
       elements,
       confirmParams: {
-        return_url: "http://localhost:3000/",
+        return_url: "http://localhost:3000/payment-confirm",
       },
     });
 
@@ -59,6 +64,37 @@ function CheckoutForm({amount}) {
       // site first to authorize the payment, then redirected to the `return_url`.
     }
   };
+
+  const createOrder=()=>{
+    let productIds=[];
+    cart.forEach(element=>{
+      productIds.push(element?.product?.id);
+    })
+    const data={
+      data:{
+        email:user.primaryEmailAddress.emailAddress,
+        userName:user.fullName,
+        amount:amount,
+        products:productIds
+      }
+    }
+    GlobalApi.createOrder(data).then(resp=>{
+      if(resp){
+        cart.forEach(element=>{
+          GlobalApi.deleteCartItem(element.id).then(result=>{})
+        })
+      }
+    })
+  }
+
+  const sendEmail=async()=>{
+    const res = await fetch("/api/send-email", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: amount,
+      }),
+    });
+  }
 
   return (
     <form onSubmit={handleSubmit}>

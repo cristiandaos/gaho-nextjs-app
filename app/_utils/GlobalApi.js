@@ -26,11 +26,19 @@ const getUserCartItems=(email)=>axiosClient.get('/carts?populate[products][popul
 // Delete cart item
 const deleteCartItem = (id) => axiosClient.delete(`/carts/${id}`);
 
+// Create order
+const createOrder = (data) => {
+    return axiosClient.post('/orders', data); 
+  };
+  
+  
+
 export default {
     getLatestProducts,
     getProductById,
     getProductByCategory,
     addToCart,
     getUserCartItems,
-    deleteCartItem
+    deleteCartItem,
+    createOrder
 };
